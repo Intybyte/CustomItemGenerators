@@ -1,16 +1,15 @@
-package me.vaan.customitemgen
+package me.vaan.customitemgen.file
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
+import me.vaan.customitemgen.*
 import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
 import java.io.File
-import java.util.ArrayList
-import java.util.LinkedList
 
-object FileLoader {
+object MachineLoader {
     fun loadFiles(file: File) {
         val machines = YamlConfiguration()
         machines.load(file)
@@ -20,18 +19,13 @@ object FileLoader {
                 continue
             }
 
-            val blockString = machines.getString("$id.block") ?: throw RuntimeException("$id machine has no block")
-            val blockMaterial = Material.getMaterial(blockString) ?: throw RuntimeException("$id machine block material not found")
-
-            val name = machines.getString("$id.name") ?: ""
-            val lore = machines.getStringList("$id.lore")
+            val stack = machines.getStack("$id.item")
+            val machineItem = SlimefunItemStack(id, stack)
 
             val energyCapacity = machines.getInt("$id.energy-capacity")
 
             val progressBarString = machines.getString("$id.progress-bar") ?: throw RuntimeException("$id machine progress entry not found")
             val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
-
-            val machineItem = SlimefunItemStack(id, blockMaterial, name, *lore.toTypedArray())
 
             val recipeTypeString = machines.getString("$id.recipe.type") ?: throw RuntimeException("$id machine recipe type not specified")
             val recipeType = recipeTypeString.getRecipeType() ?: throw RuntimeException("$id machine recipe type not found")

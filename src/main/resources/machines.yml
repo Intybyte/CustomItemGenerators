@@ -1,11 +1,12 @@
 #key is the ID
 EXAMPLE_GENERATOR_ID:
   enabled: false
-  block: FURNACE
-  name: "Example Generator"
-  lore:
-    - "Generates stuff"
-  energy-capacity: 1024
+  item:
+    block: FURNACE
+    name: "Example Generator"
+    lore:
+      - "Generates stuff"
+    energy-capacity: 1024
   progress-bar: DIAMOND_SHOVEL
   recipe:
     type: ENHANCED_CRAFTING_TABLE
