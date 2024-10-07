@@ -1,4 +1,4 @@
-package me.vaan.customitemgen
+package me.vaan.customitemgen.generator
 
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 

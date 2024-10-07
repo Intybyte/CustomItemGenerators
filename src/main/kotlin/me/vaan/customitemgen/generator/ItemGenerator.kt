@@ -1,4 +1,4 @@
-package me.vaan.customitemgen
+package me.vaan.customitemgen.generator
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
@@ -32,6 +32,7 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
+import me.vaan.customitemgen.component
 import org.apache.commons.lang3.Validate
 import org.bukkit.Location
 import org.bukkit.Material

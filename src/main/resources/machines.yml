@@ -6,7 +6,7 @@ EXAMPLE_GENERATOR_ID:
     name: "Example Generator"
     lore:
       - "Generates stuff"
-    energy-capacity: 1024
+  energy-capacity: 1024
   progress-bar: DIAMOND_SHOVEL
   recipe:
     type: ENHANCED_CRAFTING_TABLE

@@ -3,6 +3,8 @@ package me.vaan.customitemgen.file
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.*
+import me.vaan.customitemgen.generator.GenEntry
+import me.vaan.customitemgen.generator.ItemGenerator
 import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration

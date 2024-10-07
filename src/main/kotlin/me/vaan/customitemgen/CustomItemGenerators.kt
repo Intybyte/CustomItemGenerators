@@ -4,6 +4,7 @@ import io.github.seggan.sf4k.AbstractAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack
 import me.vaan.customitemgen.file.MachineLoader
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.plugin.java.JavaPlugin
@@ -24,12 +25,16 @@ class CustomItemGenerators : AbstractAddon() {
     override suspend fun onEnableAsync() {
         _instance = this
         val machines = genFile("machines.yml")
+        saveDefaultConfig()
 
+        val stack = config.getStack("GROUP.item")
         val key = NamespacedKey(this, "main_group")
-        val stackGroup = CustomItemStack(Material.GLOWSTONE, "§4Item Generators")
-        _group = ItemGroup(key, stackGroup)
+        _group = ItemGroup(key, stack)
 
-        MachineLoader.loadFiles(machines)
+        //Load after every plugin has loaded
+        Bukkit.getScheduler().runTaskLater(this, Runnable {
+            MachineLoader.loadFiles(machines)
+        }, 1L)
     }
 
     override suspend fun onDisableAsync() {
