@@ -7,6 +7,8 @@ import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
 import java.io.File
+import java.util.ArrayList
+import java.util.LinkedList
 
 object FileLoader {
     fun loadFiles(file: File) {
@@ -64,7 +66,7 @@ object FileLoader {
         return grid.map { mapperMap[it] }.toTypedArray()
     }
 
-    private fun getProduction(file: FileConfiguration, id: String) : List<GenEntry> {
+    private fun getProduction(file: FileConfiguration, id: String) : MutableList<GenEntry> {
         val productionList = file.getList("$id.production") as List<List<Any>>
 
         val genList = productionList.map {
@@ -78,6 +80,6 @@ object FileLoader {
             GenEntry(recipe, energy)
         }
 
-        return genList
+        return ArrayList(genList)
     }
 }

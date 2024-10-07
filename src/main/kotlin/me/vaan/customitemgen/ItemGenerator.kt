@@ -1,6 +1,5 @@
 package me.vaan.customitemgen
 
-import io.github.seggan.sf4k.extensions.getSlimefun
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import io.github.thebusybiscuit.slimefun4.api.items.ItemState
@@ -19,9 +18,9 @@ import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBre
 import io.github.thebusybiscuit.slimefun4.implementation.operations.CraftingOperation
 import io.github.thebusybiscuit.slimefun4.libraries.dough.inventory.InvUtils
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack
+import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
-import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu.AdvancedMenuClickHandler
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction
@@ -45,10 +44,10 @@ class ItemGenerator(
     itemGroup: ItemGroup,
     item: SlimefunItemStack,
     recipeType: RecipeType?,
-    recipe: Array<ItemStack?>?,
+    recipe: Array<ItemStack?>,
     progressBar: ItemStack,
-    val production: List<GenEntry>
-) : SlimefunItem(itemGroup, item, recipeType, recipe),
+    val production: MutableList<GenEntry>
+) : SlimefunItem(itemGroup, item, recipeType!!, recipe),
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
 
     companion object {
@@ -56,10 +55,11 @@ class ItemGenerator(
         private val BORDER = intArrayOf(3, 21)
         private val BORDER_IN = intArrayOf(0, 1, 2, 9, 11, 18, 19, 20)
         private val BORDER_OUT = intArrayOf(4, 5, 6, 7, 8, 22, 23, 24, 25, 26)
+
+        private const val KEY_POSITION = "current-position"
+        private const val KEY_CONSUMPTION = "current-consumption"
     }
 
-    private val KEY_POSITION = "current-position"
-    private val KEY_CONSUMPTION = "current-consumption"
 
     private val processor = MachineProcessor(this)
     private var currentConsumption = 0
@@ -95,7 +95,7 @@ class ItemGenerator(
             override fun newInstance(menu: BlockMenu, block: Block) {
                 val baseItem = production[0].recipe.input[0]
 
-                menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, clickedStack: ItemStack?, _: ClickAction? ->
+                menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
                     this@ItemGenerator.incrementPosition()
                     BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
                     BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
@@ -215,7 +215,7 @@ class ItemGenerator(
 
         if (capacity <= 0) {
             warn("The capacity has not been configured correctly. The Item was disabled.")
-            warn("Make sure to call '" + this.item.getSlimefun<SlimefunItem>()!!.id + "#setEnergyCapacity(...)' before registering!")
+            warn("Make sure to call '" + this.id + "#setEnergyCapacity(...)' before registering!")
         }
     }
 
@@ -250,24 +250,26 @@ class ItemGenerator(
         return energyCapacity
     }
 
-    /*
-    fun addRecipe(seconds: Int, input: ItemStack, output: ItemStack) {
-        registerRecipe(seconds, arrayOf(input), arrayOf(output))
+    fun addRecipe(seconds: Int, energy: Int, item: ItemStack) = registerRecipe(seconds, energy, item)
+
+    fun registerRecipe(seconds: Int, energy: Int, item: ItemStack) {
+        val recipe = MachineRecipe(seconds, arrayOf(item), arrayOf(item))
+        val temp = GenEntry(recipe, energy)
+        registerRecipe(temp)
     }
 
-    fun registerRecipe(seconds: Int, input: ItemStack, output: ItemStack) {
-        registerRecipe(MachineRecipe(seconds, arrayOf(input), arrayOf(output)))
+    private fun registerRecipe(entry: GenEntry) {
+        Validate.isTrue(entry.recipe.input.size == 1, "ItemGenerator must have only 1 input")
+        Validate.isTrue(entry.recipe.output.size == 1, "ItemGenerator must have only 1 output")
+        Validate.isTrue(SlimefunUtils.isItemSimilar(entry.recipe.input[0], entry.recipe.output[0], true), "ItemGenerator must have same input and output")
+
+        Validate.isTrue(entry.energy < this.capacity,"$id the energy-capacity must always be above the energy production cost")
+        Validate.isTrue(entry.recipe.ticks > 0 ,"$id the required seconds of a recipe must be a positive non-zero integer")
+
+        entry.recipe.ticks /= speed
+        production.add(entry)
     }
 
-    fun registerRecipe(recipe: MachineRecipe) {
-        Validate.isTrue(recipe.input.size == 1, "AItemGenerator must have only 1 input")
-        Validate.isTrue(recipe.output.size == 1, "AItemGenerator must have only 1 output")
-
-        recipe.ticks /= speed
-        recipes.add(recipe)
-    }
-
-     */
 
     override fun preRegister() {
         addItemHandler(object : BlockTicker() {
@@ -356,7 +358,6 @@ class ItemGenerator(
         val item = inv.getItemInSlot(slot)
 
         val recipe = production[currentPosition].recipe
-
 
         val input = recipe.input[0]
         if (!SlimefunUtils.isItemSimilar(item, input, true)) {

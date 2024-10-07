@@ -2,6 +2,7 @@ package me.vaan.customitemgen
 
 import io.github.seggan.sf4k.AbstractAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ItemStack
@@ -27,7 +28,9 @@ class CustomItemGenerators : AbstractAddon() {
         val machines = genFile("machines.yml")
         _instance = this
         _key = NamespacedKey(this, "main_group")
-        _group = ItemGroup(key, ItemStack(Material.GLOWSTONE))
+
+        val stackGroup = CustomItemStack(Material.GLOWSTONE, "§4Item Generators")
+        _group = ItemGroup(key, stackGroup)
         FileLoader.loadFiles(machines)
     }
 
@@ -48,5 +51,4 @@ class CustomItemGenerators : AbstractAddon() {
         if (!file.exists()) saveResource(path,false)
         return file
     }
-
 }
