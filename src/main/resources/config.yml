@@ -1,3 +1,14 @@
+# INPUT_SLOT MUST ALWAYS be a single integer array,
+# if you add more they won't be used
+# if you don't make it an array it won't load it
+display:
+    INPUT_SLOT: [10]
+    OUTPUT_SLOTS: [13, 14, 15, 16, 17]
+    PROGRESS_SLOT: 12
+    BORDER: [3, 21]
+    BORDER_IN: [0, 1, 2, 9, 11, 18, 19, 20]
+    BORDER_OUT: [4, 5, 6, 7, 8, 22, 23, 24, 25, 26]
+
 GROUP:
   item:
     block: GLOWSTONE

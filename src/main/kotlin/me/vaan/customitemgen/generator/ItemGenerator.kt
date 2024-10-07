@@ -33,6 +33,7 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
 import me.vaan.customitemgen.component
+import me.vaan.customitemgen.file.DisplayLoader
 import org.apache.commons.lang3.Validate
 import org.bukkit.Location
 import org.bukkit.Material
@@ -53,11 +54,6 @@ class ItemGenerator(
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
 
     companion object {
-        private const val PROGRESS_SLOT = 12
-        private val BORDER = intArrayOf(3, 21)
-        private val BORDER_IN = intArrayOf(0, 1, 2, 9, 11, 18, 19, 20)
-        private val BORDER_OUT = intArrayOf(4, 5, 6, 7, 8, 22, 23, 24, 25, 26)
-
         private const val KEY_POSITION = "current-position"
         private const val KEY_CONSUMPTION = "current-consumption"
     }
@@ -151,20 +147,20 @@ class ItemGenerator(
     }
 
     private fun constructMenu(preset: BlockMenuPreset) {
-        for (i in BORDER) {
+        for (i in DisplayLoader.BORDER) {
             preset.addItem(i, ChestMenuUtils.getBackground(), ChestMenuUtils.getEmptyClickHandler())
         }
 
-        for (i in BORDER_IN) {
+        for (i in DisplayLoader.BORDER_IN) {
             preset.addItem(i, ChestMenuUtils.getInputSlotTexture(), ChestMenuUtils.getEmptyClickHandler())
         }
 
-        for (i in BORDER_OUT) {
+        for (i in DisplayLoader.BORDER_OUT) {
             preset.addItem(i, ChestMenuUtils.getOutputSlotTexture(), ChestMenuUtils.getEmptyClickHandler())
         }
 
         preset.addItem(
-            PROGRESS_SLOT,
+            DisplayLoader.PROGRESS_SLOT,
             CustomItemStack(Material.BLACK_STAINED_GLASS_PANE, " "),
             ChestMenuUtils.getEmptyClickHandler()
         )
@@ -238,11 +234,11 @@ class ItemGenerator(
     }
 
     override fun getInputSlots(): IntArray {
-        return intArrayOf(10)
+        return DisplayLoader.INPUT_SLOT
     }
 
     override fun getOutputSlots(): IntArray {
-        return intArrayOf(13, 14, 15, 16, 17)
+        return DisplayLoader.OUTPUT_SLOTS
     }
 
     override fun getEnergyComponentType(): EnergyNetComponentType {
@@ -312,19 +308,19 @@ class ItemGenerator(
             processor.startOperation(b, currentOperation)
 
             // Fixes #3534 - Update indicator immediately
-            processor.updateProgressBar(inv, PROGRESS_SLOT, currentOperation)
+            processor.updateProgressBar(inv, DisplayLoader.PROGRESS_SLOT, currentOperation)
             return
         }
 
         if (!takeCharge(b.location)) return
 
         if (!currentOperation.isFinished) {
-            processor.updateProgressBar(inv, PROGRESS_SLOT, currentOperation)
+            processor.updateProgressBar(inv, DisplayLoader.PROGRESS_SLOT, currentOperation)
             currentOperation.addProgress(1)
             return
         }
 
-        inv.replaceExistingItem(PROGRESS_SLOT, CustomItemStack(Material.BLACK_STAINED_GLASS_PANE, " "))
+        inv.replaceExistingItem(DisplayLoader.PROGRESS_SLOT, CustomItemStack(Material.BLACK_STAINED_GLASS_PANE, " "))
         for (output in currentOperation.results) {
             inv.pushItem(output.clone(), *outputSlots)
         }
