@@ -20,6 +20,7 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.inventory.InvUtils
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils
+import io.github.thebusybiscuit.slimefun4.utils.LoreBuilder
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu.AdvancedMenuClickHandler
@@ -220,18 +221,19 @@ class ItemGenerator(
     }
 
     override fun getDisplayRecipes(): List<ItemStack> {
-        val displayRecipes: MutableList<ItemStack> = ArrayList(production.size)
+        return production.map { entry ->
+            val clone = entry.recipe.output[0].clone()
+            clone.editMeta { m ->
+                val base = m.lore() ?: emptyList()
+                val toAdd = listOf(
+                    "".component(),
+                    LoreBuilder.powerPerSecond(entry.energy).replace('&', '§').component()
+                )
 
-        for (prod in production) {
-            val recipe = prod.recipe
-            if (recipe.input.size != 1) {
-                continue
+                m.lore(base + toAdd)
             }
-
-            displayRecipes.add(recipe.input[0])
+            clone
         }
-
-        return displayRecipes
     }
 
     override fun getInputSlots(): IntArray {
