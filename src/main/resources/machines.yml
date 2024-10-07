@@ -1,0 +1,23 @@
+#key is the ID
+EXAMPLE_GENERATOR_ID:
+  enabled: false
+  block: FURNACE
+  name: "Example Generator"
+  lore:
+    - "Generates stuff"
+  energy-capacity: 1024
+  progress-bar: DIAMOND_SHOVEL
+  recipe:
+    type: ENHANCED_CRAFTING_TABLE
+    grid:
+      - "AAA"
+      - "ABA"
+      - "CCC"
+    mapper: # names with @ refer to slimefun items, all addons should be supported
+      - ['A', "BEDROCK"]
+      - ['B', "@MAGNET"]
+      - ['C', "@LEAD_INGOT"]
+  production: # ITEM - TIME(seconds) - ENERGY(consumption x 10 ticks)
+    - ["COPPER_INGOT", 10, 5]
+    - ["DIAMOND", 5, 20]
+    - ["@CARBONADO", 3, 100]
