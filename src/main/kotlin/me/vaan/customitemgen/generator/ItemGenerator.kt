@@ -32,7 +32,7 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
-import me.vaan.customitemgen.component
+import me.vaan.customitemgen.util.component
 import me.vaan.customitemgen.file.DisplayLoader
 import org.apache.commons.lang3.Validate
 import org.bukkit.Location

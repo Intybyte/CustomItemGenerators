@@ -4,6 +4,7 @@ import io.github.seggan.sf4k.AbstractAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.file.MachineLoader
+import me.vaan.customitemgen.util.getStack
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.plugin.java.JavaPlugin
