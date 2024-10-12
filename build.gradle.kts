@@ -34,6 +34,14 @@ tasks.build {
     dependsOn("shadowJar")
 }
 
+tasks.jar {
+    enabled = false
+}
+
+tasks.shadowJar {
+    archiveFileName.set("CustomItemGenerators.jar")
+}
+
 tasks.processResources {
     val props = mapOf("version" to version)
     inputs.properties(props)
