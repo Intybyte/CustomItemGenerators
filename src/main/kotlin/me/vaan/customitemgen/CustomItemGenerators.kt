@@ -4,6 +4,7 @@ import io.github.seggan.sf4k.AbstractAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.file.MachineLoader
+import me.vaan.customitemgen.file.RecipeRegistry
 import me.vaan.customitemgen.util.getStack
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
@@ -34,6 +35,8 @@ class CustomItemGenerators : AbstractAddon() {
         DisplayLoader.loadFiles(config)
         //Load after every plugin has loaded
         Bukkit.getScheduler().runTaskLater(this, Runnable {
+            server.consoleSender.sendMessage("§aEnabling CustomItemGenerators!")
+            RecipeRegistry.load()
             MachineLoader.loadFiles(machines)
         }, 1L)
     }

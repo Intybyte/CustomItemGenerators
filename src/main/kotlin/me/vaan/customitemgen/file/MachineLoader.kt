@@ -1,11 +1,10 @@
 package me.vaan.customitemgen.file
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
-import me.vaan.customitemgen.*
+import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.ItemGenerator
 import me.vaan.customitemgen.util.getProduction
 import me.vaan.customitemgen.util.getRecipe
-import me.vaan.customitemgen.util.getRecipeType
 import me.vaan.customitemgen.util.getStack
 import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
@@ -31,7 +30,7 @@ object MachineLoader {
             val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
 
             val recipeTypeString = machines.getString("$id.recipe.type") ?: throw RuntimeException("$id machine recipe type not specified")
-            val recipeType = recipeTypeString.getRecipeType() ?: throw RuntimeException("$id machine recipe type not found")
+            val recipeType = RecipeRegistry[recipeTypeString] ?: throw RuntimeException("$id machine recipe type not found")
 
             val recipe = machines.getRecipe(id)
             if (recipe.isEmpty()) throw RuntimeException("$id has invalid/empty recipe")
