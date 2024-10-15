@@ -43,6 +43,7 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 
+@Suppress("DEPRECATION")
 class ItemGenerator(
     itemGroup: ItemGroup,
     item: SlimefunItemStack,
@@ -58,7 +59,6 @@ class ItemGenerator(
         private const val KEY_CONSUMPTION = "current-consumption"
     }
 
-
     private val processor = MachineProcessor(this)
     private var currentConsumption = 0
     private var currentPosition = 0
@@ -69,9 +69,6 @@ class ItemGenerator(
         }
 
     var energyCapacity = -1
-        private set
-
-    var speed: Int = 1
         private set
 
     init {
@@ -200,13 +197,6 @@ class ItemGenerator(
         return this
     }
 
-    fun setProcessingSpeed(speed: Int): ItemGenerator {
-        Validate.isTrue(speed > 0, "The speed must be greater than zero!")
-
-        this.speed = speed
-        return this
-    }
-
     override fun register(addon: SlimefunAddon) {
         this.addon = addon
         super.register(addon)
@@ -265,7 +255,6 @@ class ItemGenerator(
         Validate.isTrue(entry.energy < this.capacity,"$id the energy-capacity must always be above the energy production cost")
         Validate.isTrue(entry.recipe.ticks > 0 ,"$id the required seconds of a recipe must be a positive non-zero integer")
 
-        entry.recipe.ticks /= speed
         production.add(entry)
     }
 
