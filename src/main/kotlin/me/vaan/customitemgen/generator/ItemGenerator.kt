@@ -215,7 +215,7 @@ class ItemGenerator(
                 val toAdd = listOf(
                     "".component(),
                     LoreBuilder.powerPerSecond(entry.energy).replace('&', '§').component(),
-                    "&8⇨ &7Time required: &e${entry.recipe.ticks/2} &7s".component()
+                    "§8⇨ §eTime required: §7${entry.recipe.ticks/2} s".component()
                 )
 
                 m.lore(base + toAdd)

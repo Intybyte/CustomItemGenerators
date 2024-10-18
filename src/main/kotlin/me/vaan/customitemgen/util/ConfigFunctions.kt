@@ -13,7 +13,7 @@ fun FileConfiguration.getStack(id: String) : ItemStack {
     val blockString = this.getString("$id.block") ?: throw RuntimeException("$id no block found")
 
     val name = this.getString("$id.name")?.component() ?: Component.text("")
-    val lore = this.getStringList("$id.lore").map { it.component() }
+    val lore = this.getStringList("$id.lore").map { it.replace("&", "§").component() }
 
     val stack: ItemStack
 
