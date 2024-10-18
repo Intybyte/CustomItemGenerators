@@ -26,7 +26,7 @@ object MachineLoader {
 
             val energyCapacity = machines.getInt("$id.energy-capacity")
 
-            val progressBarString = machines.getString("$id.progress-bar") ?: throw RuntimeException("$id machine progress entry not found")
+            val progressBarString = machines.getString("$id.progress-bar") ?: throw RuntimeException("$id machine progress bar entry not found")
             val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
 
             val recipeTypeString = machines.getString("$id.recipe.type") ?: throw RuntimeException("$id machine recipe type not specified")
