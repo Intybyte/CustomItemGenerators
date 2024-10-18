@@ -1,5 +1,6 @@
 package me.vaan.customitemgen.util
 
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.generator.GenEntry
 import net.kyori.adventure.text.Component
@@ -10,15 +11,28 @@ import org.bukkit.inventory.ItemStack
 
 fun FileConfiguration.getStack(id: String) : ItemStack {
     val blockString = this.getString("$id.block") ?: throw RuntimeException("$id no block found")
-    val blockMaterial = Material.getMaterial(blockString) ?: throw RuntimeException("$id machine block material not found")
 
     val name = this.getString("$id.name")?.component() ?: Component.text("")
     val lore = this.getStringList("$id.lore").map { it.component() }
 
-    val stack = ItemStack(blockMaterial, 1)
+    val stack: ItemStack
+
+    if (blockString.startsWith("SKULL")) {
+        try {
+            val skullIDString = blockString.split("_")[1]
+            stack = SlimefunUtils.getCustomHead(skullIDString)
+
+        } catch (e: Exception) {
+            throw RuntimeException("Error while reading skullID from $id.block, format is: SKULL_ID")
+        }
+    } else {
+        val blockMaterial = Material.getMaterial(blockString) ?: throw RuntimeException("$id machine block material not found")
+        stack = ItemStack(blockMaterial, 1)
+    }
+
     stack.editMeta {
-        it.displayName( name )
-        it.lore( lore )
+        it.displayName(name)
+        it.lore(lore)
     }
 
     return stack
