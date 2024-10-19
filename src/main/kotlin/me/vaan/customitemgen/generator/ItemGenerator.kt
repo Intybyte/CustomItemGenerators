@@ -56,7 +56,7 @@ class ItemGenerator(
     recipeType: RecipeType?,
     recipe: Array<ItemStack?>,
     private val options: Options,
-    private val production: MutableList<GenEntry>
+    val production: MutableList<GenEntry>
 ) : SlimefunItem(itemGroup, item, recipeType!!, recipe),
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
 

@@ -46,12 +46,12 @@ fun Material.getDefaultName() : TextComponent {
     return this.toString()
         .lowercase()
         .replace('_', ' ')
-        .capitalizeWords()
+        .capitalizeWords(' ')
         .component()
 }
 
-fun String.capitalizeWords() : String {
-    val words = this.split(' ')
+fun String.capitalizeWords(delimiter: Char) : String {
+    val words = this.split(delimiter)
     for (word in words) {
         word.replaceFirstChar { it.titlecase() }
     }
