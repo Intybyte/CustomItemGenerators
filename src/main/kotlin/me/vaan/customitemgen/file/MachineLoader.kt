@@ -18,7 +18,7 @@ object MachineLoader {
         machines.load(file)
 
         for (id in machines.getKeys(false)) {
-            if (!machines.getBoolean("$id.enabled")) {
+            if (!machines.getBoolean("$id.enabled", true)) {
                 continue
             }
 
