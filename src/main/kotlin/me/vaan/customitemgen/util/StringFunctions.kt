@@ -51,7 +51,12 @@ fun Material.getDefaultName() : TextComponent {
 }
 
 fun String.capitalizeWords(delimiter: Char) : String {
-    return this.split(delimiter).joinToString(" ") { word ->
+    val words = this.split(delimiter)
+    for (word in words) {
+        word.replaceFirstChar { it.titlecase() }
+    }
+
+    return this.split(' ').joinToString(" ") { word ->
         word.replaceFirstChar { it.titlecase() }
     }
 }
