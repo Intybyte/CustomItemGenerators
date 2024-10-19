@@ -32,8 +32,12 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
-import me.vaan.customitemgen.util.component
 import me.vaan.customitemgen.file.DisplayLoader
+import me.vaan.customitemgen.util.component
+import me.vaan.customitemgen.util.getDefaultName
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.lang3.Validate
 import org.bukkit.Location
 import org.bukkit.Material
@@ -42,6 +46,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
+import kotlin.random.Random
 
 @Suppress("DEPRECATION")
 class ItemGenerator(
@@ -49,8 +54,8 @@ class ItemGenerator(
     item: SlimefunItemStack,
     recipeType: RecipeType?,
     recipe: Array<ItemStack?>,
-    progressBar: ItemStack,
-    val production: MutableList<GenEntry>
+    private val options: Options,
+    private val production: MutableList<GenEntry>
 ) : SlimefunItem(itemGroup, item, recipeType!!, recipe),
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
 
@@ -72,7 +77,7 @@ class ItemGenerator(
         private set
 
     init {
-        processor.progressBar = progressBar
+        processor.progressBar = options.progressBar
 
         object : BlockMenuPreset(this.id, inventoryTitle) {
             override fun init() {
@@ -88,15 +93,16 @@ class ItemGenerator(
             }
 
             override fun newInstance(menu: BlockMenu, block: Block) {
-                val baseItem = production[0].recipe.input[0]
+                if (!options.entryRandomizer) {
+                    val baseItem = production[0].recipe.input[0]
+                    menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
+                        this@ItemGenerator.incrementPosition()
+                        BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
+                        BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
 
-                menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
-                    this@ItemGenerator.incrementPosition()
-                    BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
-                    BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
-
-                    menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
-                    false
+                        menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
+                        false
+                    }
                 }
             }
 
@@ -113,6 +119,45 @@ class ItemGenerator(
         }
 
         addItemHandler(onBlockBreak(), onBlockPlace())
+    }
+
+    private fun createRandomizerItem() : ItemStack {
+        val displayItem = ItemStack(Material.LIGHT)
+
+        val allRecipes = production.map {
+            val ditem = it.recipe.output[0]
+            val meta = ditem.itemMeta
+            var name = if (meta.hasDisplayName()) {
+                meta.displayName()!!
+            } else {
+                //val result = Component.text("§f")
+                ditem.type.getDefaultName()
+                    .color(NamedTextColor.WHITE)
+                    .decoration(TextDecoration.ITALIC, false)
+            }
+
+            name = name.append("§7".component())
+
+            if (ditem.amount != 1) {
+                name.append(" ".component())
+                    .append(ditem.amount.component())
+            }
+
+            val powerPerSecond = Component.text(" " + LoreBuilder.powerPerSecond(it.energy * 2).replace('&', '§'))
+            val duration = Component.text(" §8⇨ §7" + it.recipe.ticks/2 + "s")
+
+            "§8⇨ §7".component()
+                .append(name)
+                .append(powerPerSecond)
+                .append(duration)
+        }
+
+        displayItem.editMeta {
+            it.displayName("§eRandom Entries".component())
+            it.lore(allRecipes)
+        }
+
+        return displayItem
     }
 
     private fun onBlockBreak(): BlockBreakHandler {
@@ -162,7 +207,11 @@ class ItemGenerator(
             ChestMenuUtils.getEmptyClickHandler()
         )
 
-        preset.addItem(inputSlots[0], production[0].recipe.input[0])
+        preset.addItem(inputSlots[0], if (options.entryRandomizer) {
+            createRandomizerItem()
+        } else {
+            production[0].recipe.input[0]
+        }, ChestMenuUtils.getEmptyClickHandler())
 
         val outputHandler = object : AdvancedMenuClickHandler {
             override fun onClick(p: Player, slot: Int, cursor: ItemStack, action: ClickAction): Boolean {
@@ -214,7 +263,7 @@ class ItemGenerator(
                 val base = m.lore() ?: emptyList()
                 val toAdd = listOf(
                     "".component(),
-                    LoreBuilder.powerPerSecond(entry.energy).replace('&', '§').component(),
+                    LoreBuilder.powerPerSecond(entry.energy * 2).replace('&', '§').component(),
                     "§8⇨ §eTime required: §7${entry.recipe.ticks/2} s".component()
                 )
 
@@ -293,7 +342,7 @@ class ItemGenerator(
         var currentOperation = processor.getOperation(b)
 
         if (currentOperation == null) {
-            val next = findNextRecipe(inv) ?: return
+            val next = findNextRecipe(inv, b) ?: return
             currentOperation = CraftingOperation(next)
             processor.startOperation(b, currentOperation)
 
@@ -342,9 +391,24 @@ class ItemGenerator(
         return true
     }
 
-    private fun findNextRecipe(inv: BlockMenu): MachineRecipe? {
+    private fun findNextRecipe(inv: BlockMenu, b: Block): MachineRecipe? {
         val slot = inputSlots[0]
         val item = inv.getItemInSlot(slot)
+
+        if (options.entryRandomizer) {
+            currentPosition = Random.nextInt(production.size)
+            val recipe = production[currentPosition].recipe
+
+            if (!InvUtils.fitAll(inv.toInventory(), recipe.output, *outputSlots)) {
+                return null
+            }
+
+            currentConsumption = production[currentPosition].energy
+
+            BlockStorage.addBlockInfo(b, KEY_POSITION, currentPosition.toString())
+            BlockStorage.addBlockInfo(b, KEY_CONSUMPTION, currentConsumption.toString())
+            return recipe
+        }
 
         val recipe = production[currentPosition].recipe
 

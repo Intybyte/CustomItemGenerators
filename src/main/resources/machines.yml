@@ -18,6 +18,7 @@ EXAMPLE_GENERATOR_ID:
       - ['A', "BEDROCK"]
       - ['B', "@MAGNET"]
       - ['C', "@LEAD_INGOT"]
+  entry-randomizer: false # optional, defaults to false
   production: # ITEM - TIME(seconds) - ENERGY(consumption x 10 ticks)
     - ["COPPER_INGOT", 10, 5]
     - ["DIAMOND", 5, 20]

@@ -2,6 +2,7 @@ package me.vaan.customitemgen.util
 
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 
@@ -21,6 +22,29 @@ fun String.getItemStack() : ItemStack {
     return ItemStack(material, 1)
 }
 
-fun String.component() : Component {
+fun Any.component() : TextComponent {
+    return toString().component()
+}
+
+fun String.component() : TextComponent {
     return Component.text(this)
+}
+
+fun Material.getDefaultName() : TextComponent {
+    return this.toString()
+        .lowercase()
+        .replace('_', ' ')
+        .capitalizeWords()
+        .component()
+}
+
+fun String.capitalizeWords() : String {
+    val words = this.split(' ')
+    for (word in words) {
+        word.replaceFirstChar { it.titlecase() }
+    }
+
+    return this.split(' ').joinToString(" ") { word ->
+        word.replaceFirstChar { it.titlecase() }
+    }
 }

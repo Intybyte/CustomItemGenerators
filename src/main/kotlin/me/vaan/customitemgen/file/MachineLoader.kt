@@ -3,6 +3,7 @@ package me.vaan.customitemgen.file
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
 import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.ItemGenerator
+import me.vaan.customitemgen.generator.Options
 import me.vaan.customitemgen.util.getProduction
 import me.vaan.customitemgen.util.getRecipe
 import me.vaan.customitemgen.util.getStack
@@ -41,7 +42,14 @@ object MachineLoader {
             val maxProduction = production.maxOf { it.energy }
             if (energyCapacity < maxProduction) throw RuntimeException("$id the energy-capacity must always be above the energy production cost")
 
-            ItemGenerator(CustomItemGenerators.group, machineItem, recipeType, recipe, ItemStack(progressBarMaterial), production)
+            val entryRandomizer = machines.getBoolean("$id.entry-randomizer", false)
+
+            val options = Options(
+                entryRandomizer = entryRandomizer,
+                progressBar = ItemStack(progressBarMaterial)
+            )
+
+            ItemGenerator(CustomItemGenerators.group, machineItem, recipeType, recipe, options, production)
                 .setCapacity(energyCapacity)
                 .register(CustomItemGenerators.instance)
         }
