@@ -77,47 +77,47 @@ class ItemGenerator(
     var energyCapacity = -1
         private set
 
-    init {
-        processor.progressBar = options.progressBar
+    private val blockMenuPreset = object : BlockMenuPreset(this.id, inventoryTitle) {
+        override fun init() {
+            constructMenu(this)
+        }
 
-        object : BlockMenuPreset(this.id, inventoryTitle) {
-            override fun init() {
-                constructMenu(this)
-            }
-
-            override fun getSlotsAccessedByItemTransport(flow: ItemTransportFlow): IntArray {
-                return if (flow == ItemTransportFlow.INSERT) {
-                    inputSlots
-                } else {
-                    outputSlots
-                }
-            }
-
-            override fun newInstance(menu: BlockMenu, block: Block) {
-                if (options.entryRandomizer) return
-
-                val baseItem = production[0].recipe.input[0]
-                menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
-                    this@ItemGenerator.incrementPosition()
-                    BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
-                    BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
-
-                    menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
-                    false
-                }
-            }
-
-            override fun canOpen(b: Block, p: Player): Boolean {
-                if (p.hasPermission("slimefun.inventory.bypass")) {
-                    return true
-                }
-
-                return this@ItemGenerator.canUse(p, false) && (// Protection manager doesn't exist in unit tests
-                        Slimefun.instance()!!.isUnitTest
-                            || Slimefun.getProtectionManager()
-                            .hasPermission(p, b.location, Interaction.INTERACT_BLOCK))
+        override fun getSlotsAccessedByItemTransport(flow: ItemTransportFlow): IntArray {
+            return if (flow == ItemTransportFlow.INSERT) {
+                inputSlots
+            } else {
+                outputSlots
             }
         }
+
+        override fun newInstance(menu: BlockMenu, block: Block) {
+            if (options.entryRandomizer) return
+
+            val baseItem = production[0].recipe.input[0]
+            menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
+                this@ItemGenerator.incrementPosition()
+                BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
+                BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
+
+                menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
+                false
+            }
+        }
+
+        override fun canOpen(b: Block, p: Player): Boolean {
+            if (p.hasPermission("slimefun.inventory.bypass")) {
+                return true
+            }
+
+            return this@ItemGenerator.canUse(p, false) && (// Protection manager doesn't exist in unit tests
+                    Slimefun.instance()!!.isUnitTest
+                            || Slimefun.getProtectionManager()
+                        .hasPermission(p, b.location, Interaction.INTERACT_BLOCK))
+        }
+    }
+
+    init {
+        processor.progressBar = options.progressBar
 
         addItemHandler(onBlockBreak(), onBlockPlace())
     }

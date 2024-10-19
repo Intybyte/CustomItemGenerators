@@ -3,10 +3,7 @@ package me.vaan.customitemgen
 import io.github.seggan.sf4k.AbstractAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import me.vaan.customitemgen.file.DisplayLoader
-import me.vaan.customitemgen.file.MachineLoader
-import me.vaan.customitemgen.file.RecipeRegistry
 import me.vaan.customitemgen.util.getBlock
-import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -25,7 +22,6 @@ class CustomItemGenerators : AbstractAddon() {
 
     override suspend fun onEnableAsync() {
         _instance = this
-        val machines = genFile("machines.yml")
         saveDefaultConfig()
 
         val stack = config.getBlock("GROUP.item")
@@ -33,12 +29,8 @@ class CustomItemGenerators : AbstractAddon() {
         _group = ItemGroup(key, stack)
 
         DisplayLoader.loadFiles(config)
-        //Load after every plugin has loaded
-        Bukkit.getScheduler().runTaskLater(this, Runnable {
-            server.consoleSender.sendMessage("§aEnabling CustomItemGenerators!")
-            RecipeRegistry.load()
-            MachineLoader.loadFiles(machines)
-        }, 1L)
+        //Load after every addon item has been loaded
+        server.pluginManager.registerEvents(FinalizeListener, this)
     }
 
     override suspend fun onDisableAsync() {
@@ -53,7 +45,7 @@ class CustomItemGenerators : AbstractAddon() {
         return "https://github.com/Intybyte/CustomItemGenerators/issues"
     }
 
-    private fun genFile(path: String): File {
+    fun genFile(path: String): File {
         val file = File(this.dataFolder, path)
         if (!file.exists()) saveResource(path,false)
         return file

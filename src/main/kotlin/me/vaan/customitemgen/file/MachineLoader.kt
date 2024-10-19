@@ -49,9 +49,12 @@ object MachineLoader {
                 progressBar = ItemStack(progressBarMaterial)
             )
 
-            ItemGenerator(CustomItemGenerators.group, machineItem, recipeType, recipe, options, production)
+            val generator = ItemGenerator(CustomItemGenerators.group, machineItem, recipeType, recipe, options, production)
+            generator
                 .setCapacity(energyCapacity)
                 .register(CustomItemGenerators.instance)
+
+            generator.load() //have to post load it myself
         }
     }
 }
