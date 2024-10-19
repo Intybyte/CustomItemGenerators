@@ -2,6 +2,7 @@ package me.vaan.customitemgen.util
 
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
+import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.GenEntry
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
@@ -9,7 +10,7 @@ import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.inventory.ItemStack
 
 
-fun FileConfiguration.getStack(id: String) : ItemStack {
+fun FileConfiguration.getBlock(id: String) : ItemStack {
     val blockString = this.getString("$id.block") ?: throw RuntimeException("$id no block found")
 
     val name = this.getString("$id.name")?.component() ?: Component.text("")
@@ -21,7 +22,6 @@ fun FileConfiguration.getStack(id: String) : ItemStack {
         try {
             val skullIDString = blockString.split("_")[1]
             stack = SlimefunUtils.getCustomHead(skullIDString)
-
         } catch (e: Exception) {
             throw RuntimeException("Error while reading skullID from $id.block, format is: SKULL_ID")
         }
@@ -47,6 +47,13 @@ fun FileConfiguration.getRecipe(id: String) : Array<ItemStack?> {
         val key = (it[0] as String)[0]
         val stringValue = it[1] as String
         val value = stringValue.getItemStack()
+        if (value.amount != 1) {
+            CustomItemGenerators.instance.logger.warning("""
+                You created a recipe using an amount different than 1, 
+                I am all for the f around and find out, but what you are trying to 
+                do is unsupported behaviour, so if the recipe breaks don't blame me ¯\_(ツ)_/¯.""".trimIndent())
+        }
+
         key to value
     }
 

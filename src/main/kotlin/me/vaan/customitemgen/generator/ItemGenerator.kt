@@ -36,6 +36,7 @@ import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.util.component
 import me.vaan.customitemgen.util.getDefaultName
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.lang3.Validate
@@ -93,16 +94,16 @@ class ItemGenerator(
             }
 
             override fun newInstance(menu: BlockMenu, block: Block) {
-                if (!options.entryRandomizer) {
-                    val baseItem = production[0].recipe.input[0]
-                    menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
-                        this@ItemGenerator.incrementPosition()
-                        BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
-                        BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
+                if (options.entryRandomizer) return
 
-                        menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
-                        false
-                    }
+                val baseItem = production[0].recipe.input[0]
+                menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
+                    this@ItemGenerator.incrementPosition()
+                    BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
+                    BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
+
+                    menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
+                    false
                 }
             }
 
@@ -127,21 +128,27 @@ class ItemGenerator(
         val allRecipes = production.map {
             val ditem = it.recipe.output[0]
             val meta = ditem.itemMeta
+
             var name = if (meta.hasDisplayName()) {
-                meta.displayName()!!
+                val display = meta.displayName()!! as TextComponent
+                if (display.content().isEmpty()) {
+                    display.children()[0] as TextComponent
+                } else {
+                    display
+                }
+
             } else {
-                //val result = Component.text("§f")
                 ditem.type.getDefaultName()
                     .color(NamedTextColor.WHITE)
                     .decoration(TextDecoration.ITALIC, false)
             }
 
-            name = name.append("§7".component())
-
+            val currentStyle = name.style()
             if (ditem.amount != 1) {
-                name.append(" ".component())
-                    .append(ditem.amount.component())
+                name = name.append(" ${ditem.amount}".component()).style(currentStyle)
             }
+
+            name = name.append(" §7".component())
 
             val powerPerSecond = Component.text(" " + LoreBuilder.powerPerSecond(it.energy * 2).replace('&', '§'))
             val duration = Component.text(" §8⇨ §7" + it.recipe.ticks/2 + "s")
@@ -374,14 +381,12 @@ class ItemGenerator(
      * location to try to remove charge from
      * @return Whether charge was taken if its chargeable
      */
-    private fun takeCharge(l: Location?): Boolean {
-        Validate.notNull(l, "Can't attempt to take charge from a null location!")
-
+    private fun takeCharge(l: Location): Boolean {
         if (!isChargeable) {
             return true
         }
 
-        val charge = getCharge(l!!)
+        val charge = getCharge(l)
 
         if (charge < energyConsumption) {
             return false

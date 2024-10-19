@@ -5,7 +5,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.file.MachineLoader
 import me.vaan.customitemgen.file.RecipeRegistry
-import me.vaan.customitemgen.util.getStack
+import me.vaan.customitemgen.util.getBlock
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.plugin.java.JavaPlugin
@@ -28,7 +28,7 @@ class CustomItemGenerators : AbstractAddon() {
         val machines = genFile("machines.yml")
         saveDefaultConfig()
 
-        val stack = config.getStack("GROUP.item")
+        val stack = config.getBlock("GROUP.item")
         val key = NamespacedKey(this, "main_group")
         _group = ItemGroup(key, stack)
 

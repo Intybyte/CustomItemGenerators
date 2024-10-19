@@ -6,7 +6,7 @@ import me.vaan.customitemgen.generator.ItemGenerator
 import me.vaan.customitemgen.generator.Options
 import me.vaan.customitemgen.util.getProduction
 import me.vaan.customitemgen.util.getRecipe
-import me.vaan.customitemgen.util.getStack
+import me.vaan.customitemgen.util.getBlock
 import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
@@ -22,7 +22,7 @@ object MachineLoader {
                 continue
             }
 
-            val stack = machines.getStack("$id.item")
+            val stack = machines.getBlock("$id.item")
             val machineItem = SlimefunItemStack(id, stack)
 
             val energyCapacity = machines.getInt("$id.energy-capacity")
