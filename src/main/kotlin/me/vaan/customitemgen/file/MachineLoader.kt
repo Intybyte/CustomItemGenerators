@@ -18,6 +18,8 @@ object MachineLoader {
     var registered: Set<ItemGenerator> = setOf()
         private set
 
+    private var sent = false
+
     fun loadFiles(file: File) {
         val machines = YamlConfiguration()
         machines.load(file)
@@ -88,6 +90,10 @@ object MachineLoader {
             AdvancedPie("generated_items") {
                 val hashMap = hashMapOf<String, Int>()
 
+                if (sent) {
+                    return@AdvancedPie hashMap
+                }
+
                 for(entry in registered) {
                     for (produceEntry in entry.production) {
                         val item = produceEntry.recipe.input[0]
@@ -101,6 +107,7 @@ object MachineLoader {
                     }
                 }
 
+                sent = true
                 hashMap
             }
         )
