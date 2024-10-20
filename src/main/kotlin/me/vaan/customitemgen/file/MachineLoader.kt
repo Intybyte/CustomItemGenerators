@@ -67,6 +67,7 @@ object MachineLoader {
         //in case this is called by some other addon (please don't call this)
         mutable.addAll(registered)
         registered = mutable.toSet()
+        registerMetrics()
     }
 
     private fun registerMetrics() {
