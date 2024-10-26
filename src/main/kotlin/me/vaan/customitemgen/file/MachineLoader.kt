@@ -18,7 +18,7 @@ object MachineLoader {
     var registered: Set<ItemGenerator> = setOf()
         private set
 
-    fun loadFiles(file: File) {
+    fun load(file: File) {
         val machines = YamlConfiguration()
         machines.load(file)
 
@@ -34,9 +34,6 @@ object MachineLoader {
 
             val energyCapacity = machines.getInt("$id.energy-capacity")
 
-            val progressBarString = machines.getString("$id.progress-bar") ?: throw RuntimeException("$id machine progress bar entry not found")
-            val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
-
             val recipeTypeString = machines.getString("$id.recipe.type") ?: throw RuntimeException("$id machine recipe type not specified")
             val recipeType = RecipeRegistry[recipeTypeString] ?: throw RuntimeException("$id machine recipe type not found")
 
@@ -49,13 +46,7 @@ object MachineLoader {
             val maxProduction = production.maxOf { it.energy }
             if (energyCapacity < maxProduction) throw RuntimeException("$id the energy-capacity must always be above the energy production cost")
 
-            val entryRandomizer = machines.getBoolean("$id.entry-randomizer", false)
-
-            val options = Options(
-                entryRandomizer = entryRandomizer,
-                progressBar = ItemStack(progressBarMaterial)
-            )
-
+            val options = loadOptions(machines, id)
             val generator = ItemGenerator(CustomItemGenerators.group, machineItem, recipeType, recipe, options, production)
             generator
                 .setCapacity(energyCapacity)
@@ -68,6 +59,18 @@ object MachineLoader {
         mutable.addAll(registered)
         registered = mutable.toSet()
         registerMetrics()
+    }
+
+    private fun loadOptions(machines: YamlConfiguration, id: String) : Options {
+        val progressBarString = machines.getString("$id.progress-bar") ?: throw RuntimeException("$id machine progress bar entry not found")
+        val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
+
+        val entryRandomizer = machines.getBoolean("$id.entry-randomizer", false)
+
+        return Options(
+            entryRandomizer = entryRandomizer,
+            progressBar = ItemStack(progressBarMaterial)
+        )
     }
 
     private fun registerMetrics() {
