@@ -78,9 +78,7 @@ class ItemGenerator(
         private set
 
     private val blockMenuPreset = object : BlockMenuPreset(this.id, inventoryTitle) {
-        override fun init() {
-            constructMenu(this)
-        }
+        override fun init() = constructMenu(this)
 
         override fun getSlotsAccessedByItemTransport(flow: ItemTransportFlow): IntArray {
             return if (flow == ItemTransportFlow.INSERT) {
