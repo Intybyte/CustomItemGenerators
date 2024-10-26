@@ -16,6 +16,6 @@ object FinalizeListener : Listener {
 
         plugin.server.consoleSender.sendMessage("§aEnabling CustomItemGenerators!")
         RecipeRegistry.load()
-        MachineLoader.loadFiles(machines)
+        MachineLoader.load(machines)
     }
 }
