@@ -4,6 +4,7 @@ import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.GenEntry
+import me.vaan.customitemgen.generator.Validator
 import net.kyori.adventure.text.Component
 import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
@@ -75,4 +76,21 @@ fun FileConfiguration.getProduction(id: String) : MutableList<GenEntry> {
     }
 
     return ArrayList(genList)
+}
+
+fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> {
+    val conditionKeys = this.getConfigurationSection("$id.conditions")
+    val validatorList = hashMapOf<String, Validator<*>>()
+
+    conditionKeys ?: return validatorList
+
+    val timeRange = conditionKeys.getString("time-range")
+    if (timeRange != null) {
+        val validate : Validator<Int> = {
+            it in timeRange.parseTimeRange()
+        }
+        validatorList["time-range"] = validate
+    }
+
+    return validatorList
 }

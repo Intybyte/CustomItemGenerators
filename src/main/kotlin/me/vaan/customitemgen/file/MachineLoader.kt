@@ -66,10 +66,12 @@ object MachineLoader {
         val progressBarMaterial = Material.getMaterial(progressBarString) ?: throw RuntimeException("$id machine progress bar material not found")
 
         val entryRandomizer = machines.getBoolean("$id.entry-randomizer", false)
+        val validators = machines.getConditions(id)
 
         return Options(
             entryRandomizer = entryRandomizer,
-            progressBar = ItemStack(progressBarMaterial)
+            progressBar = ItemStack(progressBarMaterial),
+            validators = validators
         )
     }
 

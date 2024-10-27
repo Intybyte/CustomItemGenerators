@@ -55,3 +55,19 @@ fun String.capitalizeWords(delimiter: Char) : String {
         word.replaceFirstChar { it.titlecase() }
     }
 }
+
+fun String.parseTimeRange() : IntRange {
+    val integers = this.split("-")
+
+    return integers[0].parseTime()..integers[1].parseTime()
+}
+
+fun String.parseTime() : Int {
+    return when(this) {
+        "day" -> 1000
+        "noon" -> 6000
+        "night" -> 13000
+        "midnight" -> 18000
+        else -> this.toInt()
+    }
+}
