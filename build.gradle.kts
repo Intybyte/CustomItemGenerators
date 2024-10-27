@@ -1,10 +1,10 @@
 plugins {
     kotlin("jvm") version "2.1.0-Beta1"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.3"
 }
 
 group = "me.vaan"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -36,11 +36,11 @@ tasks.build {
 }
 
 tasks.jar {
-    enabled = false
 }
 
 tasks.shadowJar {
     archiveFileName.set("CustomItemGenerators.jar")
+    relocate("org.bstats", "me.vaan")
 }
 
 tasks.processResources {

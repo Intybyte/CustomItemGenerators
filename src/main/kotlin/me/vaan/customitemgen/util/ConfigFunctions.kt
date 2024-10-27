@@ -1,14 +1,21 @@
 package me.vaan.customitemgen.util
 
+import io.github.seggan.sf4k.extensions.getSlimefun
+import io.github.seggan.sf4k.extensions.isSlimefun
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
+import kotlinx.coroutines.yield
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.CustomItemGenerators
-import me.vaan.customitemgen.generator.GenEntry
-import me.vaan.customitemgen.generator.Validator
+import me.vaan.customitemgen.data.BlockRelative
+import me.vaan.customitemgen.data.GenEntry
+import me.vaan.customitemgen.data.Validator
 import net.kyori.adventure.text.Component
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.inventory.ItemStack
+import org.bukkit.util.Vector
 
 
 fun FileConfiguration.getBlock(id: String) : ItemStack {
@@ -84,6 +91,7 @@ fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> 
 
     conditionKeys ?: return validatorList
 
+    //region Process time range
     val timeRange = conditionKeys.getString("time-range")
     if (timeRange != null) {
         val validate : Validator<Int> = {
@@ -91,6 +99,38 @@ fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> 
         }
         validatorList["time-range"] = validate
     }
+    //endregion
+
+    //region Process block relatives
+    val blockRelatives = conditionKeys.getStringList("block-relatives")
+    val list = mutableListOf<BlockRelative>()
+    for (block in blockRelatives)  {
+        val (x, y, z, item) = block.split(":")
+        val stack = item.getItemStack()
+
+        list += BlockRelative(Vector(x.toInt(), y.toInt(), z.toInt()), stack.type,
+            if (stack.isSlimefun()) {
+                stack.getSlimefun<SlimefunItem>()?.id
+            } else {
+                null
+            }
+        )
+    }
+
+    if (list.isNotEmpty()) {
+        val validate = fun(it: Location): Boolean {
+            for (element in list) {
+                if (!element.check(it)) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        validatorList["block-relatives"] = validate
+    }
+    //endregion
 
     return validatorList
 }

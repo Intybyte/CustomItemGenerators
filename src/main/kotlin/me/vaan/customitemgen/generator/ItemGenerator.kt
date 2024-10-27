@@ -32,6 +32,8 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
+import me.vaan.customitemgen.data.GenEntry
+import me.vaan.customitemgen.data.Options
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.util.component
 import me.vaan.customitemgen.util.getDefaultName

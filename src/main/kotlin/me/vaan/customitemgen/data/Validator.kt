@@ -1,4 +1,4 @@
-package me.vaan.customitemgen.generator
+package me.vaan.customitemgen.data
 
 typealias Validator<T> = (T) -> Boolean
 

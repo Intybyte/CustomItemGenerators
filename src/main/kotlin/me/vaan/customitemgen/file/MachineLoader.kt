@@ -5,7 +5,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
 import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.ItemGenerator
-import me.vaan.customitemgen.generator.Options
+import me.vaan.customitemgen.data.Options
 import me.vaan.customitemgen.util.*
 import org.bstats.charts.AdvancedPie
 import org.bstats.charts.SimplePie
