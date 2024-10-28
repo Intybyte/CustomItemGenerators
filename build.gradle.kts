@@ -56,6 +56,15 @@ tasks.jar {
 tasks.shadowJar {
     archiveFileName.set("CustomItemGenerators-$version.jar")
     relocate("org.bstats", "me.vaan")
+
+    dependencies {
+        exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib"))
+        exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8"))
+        exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-jdk7"))
+        exclude(dependency("org.jetbrains.kotlin:kotlin-stdlib-common"))
+        exclude(dependency("org.jetbrains.kotlin:kotlin-reflect"))
+        //exclude(dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core"))
+    }
 }
 
 tasks.processResources {
