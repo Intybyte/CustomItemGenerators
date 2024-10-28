@@ -36,10 +36,11 @@ tasks.build {
 }
 
 tasks.jar {
+    enabled = false
 }
 
 tasks.shadowJar {
-    archiveFileName.set("CustomItemGenerators.jar")
+    archiveFileName.set("CustomItemGenerators-$version.jar")
     relocate("org.bstats", "me.vaan")
 }
 
