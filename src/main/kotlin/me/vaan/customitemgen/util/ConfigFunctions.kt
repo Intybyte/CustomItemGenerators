@@ -4,7 +4,6 @@ import io.github.seggan.sf4k.extensions.getSlimefun
 import io.github.seggan.sf4k.extensions.isSlimefun
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
-import kotlinx.coroutines.yield
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.data.BlockRelative
@@ -13,12 +12,13 @@ import me.vaan.customitemgen.data.Validator
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 
 
-fun FileConfiguration.getBlock(id: String) : ItemStack {
+fun FileConfiguration.getBlock(id: String): ItemStack {
     val blockString = this.getString("$id.block") ?: throw RuntimeException("$id no block found")
 
     val name = this.getString("$id.name")?.component() ?: Component.text("")
@@ -34,7 +34,8 @@ fun FileConfiguration.getBlock(id: String) : ItemStack {
             throw RuntimeException("Error while reading skullID from $id.block, format is: SKULL_ID")
         }
     } else {
-        val blockMaterial = Material.getMaterial(blockString) ?: throw RuntimeException("$id machine block material not found")
+        val blockMaterial =
+            Material.getMaterial(blockString) ?: throw RuntimeException("$id machine block material not found")
         stack = ItemStack(blockMaterial, 1)
     }
 
@@ -46,7 +47,7 @@ fun FileConfiguration.getBlock(id: String) : ItemStack {
     return stack
 }
 
-fun FileConfiguration.getRecipe(id: String) : Array<ItemStack?> {
+fun FileConfiguration.getRecipe(id: String): Array<ItemStack?> {
     val stringGrid = this.getStringList("$id.recipe.grid").joinToString("")
     val grid = stringGrid.toCharArray()
 
@@ -56,10 +57,12 @@ fun FileConfiguration.getRecipe(id: String) : Array<ItemStack?> {
         val stringValue = it[1] as String
         val value = stringValue.getItemStack()
         if (value.amount != 1) {
-            CustomItemGenerators.instance.logger.warning("""
+            CustomItemGenerators.instance.logger.warning(
+                """
                 You created a recipe using an amount different than 1, 
                 I am all for the f around and find out, but what you are trying to 
-                do is unsupported behaviour, so if the recipe breaks don't blame me ¯\_(ツ)_/¯.""".trimIndent())
+                do is unsupported behaviour, so if the recipe breaks don't blame me ¯\_(ツ)_/¯.""".trimIndent()
+            )
         }
 
         key to value
@@ -68,7 +71,7 @@ fun FileConfiguration.getRecipe(id: String) : Array<ItemStack?> {
     return grid.map { mapperMap[it] }.toTypedArray()
 }
 
-fun FileConfiguration.getProduction(id: String) : MutableList<GenEntry> {
+fun FileConfiguration.getProduction(id: String): MutableList<GenEntry> {
     val productionList = this.getList("$id.production") as List<List<Any>>
 
     val genList = productionList.map {
@@ -85,7 +88,7 @@ fun FileConfiguration.getProduction(id: String) : MutableList<GenEntry> {
     return ArrayList(genList)
 }
 
-fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> {
+fun FileConfiguration.getConditions(id: String): HashMap<String, Validator<*>> {
     val conditionKeys = this.getConfigurationSection("$id.conditions")
     val validatorList = hashMapOf<String, Validator<*>>()
 
@@ -94,21 +97,29 @@ fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> 
     //region Process time range
     val timeRange = conditionKeys.getString("time-range")
     if (timeRange != null) {
-        val validate : Validator<Int> = {
+        val validate: Validator<Int> = {
             it in timeRange.parseTimeRange()
         }
         validatorList["time-range"] = validate
     }
     //endregion
 
+    return validatorList
+}
+
+// After some thinking, this feature might be too hard for users to implement and to test
+/*
+private fun addBlockValidator(validatorList: HashMap<String, Validator<*>>, conditionKeys: ConfigurationSection) {
     //region Process block relatives
+
     val blockRelatives = conditionKeys.getStringList("block-relatives")
     val list = mutableListOf<BlockRelative>()
-    for (block in blockRelatives)  {
+    for (block in blockRelatives) {
         val (x, y, z, item) = block.split(":")
         val stack = item.getItemStack()
 
-        list += BlockRelative(Vector(x.toInt(), y.toInt(), z.toInt()), stack.type,
+        list += BlockRelative(
+            Vector(x.toInt(), y.toInt(), z.toInt()), stack.type,
             if (stack.isSlimefun()) {
                 stack.getSlimefun<SlimefunItem>()?.id
             } else {
@@ -116,6 +127,7 @@ fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> 
             }
         )
     }
+
 
     if (list.isNotEmpty()) {
         val validate = fun(it: Location): Boolean {
@@ -131,6 +143,5 @@ fun FileConfiguration.getConditions(id: String) : HashMap<String, Validator<*>> 
         validatorList["block-relatives"] = validate
     }
     //endregion
-
-    return validatorList
 }
+*/
