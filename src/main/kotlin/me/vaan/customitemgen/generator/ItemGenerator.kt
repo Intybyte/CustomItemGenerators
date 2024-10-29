@@ -1,5 +1,7 @@
 package me.vaan.customitemgen.generator
 
+import com.github.shynixn.mccoroutine.bukkit.launch
+import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
 import io.github.thebusybiscuit.slimefun4.api.items.ItemState
@@ -22,6 +24,8 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils
 import io.github.thebusybiscuit.slimefun4.utils.LoreBuilder
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu.AdvancedMenuClickHandler
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction
@@ -32,6 +36,7 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
+import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.data.*
 import me.vaan.customitemgen.events.CIGInitEvent
 import me.vaan.customitemgen.events.CIGPreRunEvent
@@ -126,7 +131,7 @@ class ItemGenerator(
         addItemHandler(onBlockBreak(), onBlockPlace())
     }
 
-    private fun createRandomizerItem() : ItemStack {
+    private fun createRandomizerItem(): ItemStack {
         val displayItem = ItemStack(Material.LIGHT)
 
         val allRecipes = production.map {
@@ -155,7 +160,7 @@ class ItemGenerator(
             name = name.append(" §7".component())
 
             val powerPerSecond = Component.text(" " + LoreBuilder.powerPerSecond(it.energy * 2).replace('&', '§'))
-            val duration = Component.text(" §8⇨ §7" + it.recipe.ticks/2 + "s")
+            val duration = Component.text(" §8⇨ §7" + it.recipe.ticks / 2 + "s")
 
             "§8⇨ §7".component()
                 .append(name)
@@ -218,11 +223,13 @@ class ItemGenerator(
             ChestMenuUtils.getEmptyClickHandler()
         )
 
-        preset.addItem(inputSlots[0], if (options.entryRandomizer) {
-            createRandomizerItem()
-        } else {
-            production[0].recipe.input[0]
-        }, ChestMenuUtils.getEmptyClickHandler())
+        preset.addItem(
+            inputSlots[0], if (options.entryRandomizer) {
+                createRandomizerItem()
+            } else {
+                production[0].recipe.input[0]
+            }, ChestMenuUtils.getEmptyClickHandler()
+        )
 
         val outputHandler = object : AdvancedMenuClickHandler {
             override fun onClick(p: Player, slot: Int, cursor: ItemStack, action: ClickAction): Boolean {
@@ -275,7 +282,7 @@ class ItemGenerator(
                 val toAdd = listOf(
                     "".component(),
                     LoreBuilder.powerPerSecond(entry.energy * 2).replace('&', '§').component(),
-                    "§8⇨ §eTime required: §7${entry.recipe.ticks/2} s".component()
+                    "§8⇨ §eTime required: §7${entry.recipe.ticks / 2} s".component()
                 )
 
                 m.lore(base + toAdd)
@@ -311,10 +318,19 @@ class ItemGenerator(
     private fun registerRecipe(entry: GenEntry) {
         Validate.isTrue(entry.recipe.input.size == 1, "ItemGenerator must have only 1 input")
         Validate.isTrue(entry.recipe.output.size == 1, "ItemGenerator must have only 1 output")
-        Validate.isTrue(SlimefunUtils.isItemSimilar(entry.recipe.input[0], entry.recipe.output[0], true), "ItemGenerator must have same input and output")
+        Validate.isTrue(
+            SlimefunUtils.isItemSimilar(entry.recipe.input[0], entry.recipe.output[0], true),
+            "ItemGenerator must have same input and output"
+        )
 
-        Validate.isTrue(entry.energy < this.capacity,"$id the energy-capacity must always be above the energy production cost")
-        Validate.isTrue(entry.recipe.ticks > 0 ,"$id the required seconds of a recipe must be a positive non-zero integer")
+        Validate.isTrue(
+            entry.energy < this.capacity,
+            "$id the energy-capacity must always be above the energy production cost"
+        )
+        Validate.isTrue(
+            entry.recipe.ticks > 0,
+            "$id the required seconds of a recipe must be a positive non-zero integer"
+        )
 
         production.add(entry)
     }
@@ -340,15 +356,18 @@ class ItemGenerator(
             val locPosition = BlockStorage.getLocationInfo(b.location, KEY_POSITION) ?: "0"
             currentPosition = locPosition.toInt()
 
-            val locConsumption = BlockStorage.getLocationInfo(b.location, KEY_CONSUMPTION) ?: production[0].energy.toString()
+            val locConsumption =
+                BlockStorage.getLocationInfo(b.location, KEY_CONSUMPTION) ?: production[0].energy.toString()
             currentConsumption = locConsumption.toInt()
 
             machineData = MachineData(b.location)
         }
         machineData = MachineData(b.location)
 
-        val event = CIGInitEvent(SFMachine(this, b))
-        Bukkit.getPluginManager().callEvent(event)
+        CustomItemGenerators.instance.launch {
+            val event = CIGInitEvent(SFMachine(this@ItemGenerator, b))
+            Bukkit.getPluginManager().callEvent(event)
+        }
 
         initiated = true
     }
@@ -357,8 +376,13 @@ class ItemGenerator(
         val sfMachine = SFMachine(this, b)
         val execute = options.validators.validate(sfMachine)
 
-        val event = CIGPreRunEvent(sfMachine, execute)
-        Bukkit.getPluginManager().callEvent(event)
+        val event = runBlocking {
+            withContext(CustomItemGenerators.instance.minecraftDispatcher) {
+                val event = CIGPreRunEvent(sfMachine, execute)
+                Bukkit.getPluginManager().callEvent(event)
+                event
+            }
+        }
 
         return execute && !event.isCancelled
     }

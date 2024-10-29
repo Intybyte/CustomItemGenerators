@@ -7,12 +7,17 @@ import io.github.thebusybiscuit.slimefun4.implementation.Slimefun
  * This class will exist until slimefun decides to implement some way to keep track of
  * all the recipe types. It is useful to keep track of the recipe types added by other addons
  */
-object RecipeRegistry : MutableMap<String, RecipeType> by HashMap() {
+object RecipeRegistry {
+    private val registry = HashMap<String, RecipeType>()
+
     init {
         val items = Slimefun.getRegistry().slimefunItemIds.values
         for (item in items) {
-            val recipeType = item.recipeType
-            this[recipeType.key.key.lowercase()] = recipeType
+            registry[item.recipeType.key.key.lowercase()] = item.recipeType
         }
+    }
+
+    operator fun get(key: String) : RecipeType? {
+        return registry[key.lowercase()]
     }
 }
