@@ -6,6 +6,8 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack
 import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.generator.ItemGenerator
 import me.vaan.customitemgen.data.Options
+import me.vaan.customitemgen.registry.MachineRegistry
+import me.vaan.customitemgen.registry.RecipeRegistry
 import me.vaan.customitemgen.util.*
 import org.bstats.charts.AdvancedPie
 import org.bstats.charts.SimplePie
@@ -15,15 +17,12 @@ import org.bukkit.inventory.ItemStack
 import java.io.File
 
 object MachineLoader {
-    var registered: Set<ItemGenerator> = setOf()
-        private set
 
     fun load(file: File) {
         val machines = YamlConfiguration()
         machines.load(file)
 
         val keys = machines.getKeys(false)
-        val mutable = mutableListOf<ItemGenerator>()
         for (id in keys) {
             if (!machines.getBoolean("$id.enabled", true)) {
                 continue
@@ -53,11 +52,9 @@ object MachineLoader {
                 .register(CustomItemGenerators.instance)
 
             generator.load() //have to post load it myself
-            mutable.add(generator)
+            MachineRegistry[id] = generator
         }
-        //in case this is called by some other addon (please don't call this)
-        mutable.addAll(registered)
-        registered = mutable.toSet()
+
         registerMetrics()
     }
 
@@ -80,13 +77,13 @@ object MachineLoader {
 
         metrics.addCustomChart(
             SimplePie("custom_generators") {
-                registered.size.toString()
+                MachineRegistry.size.toString()
             }
         )
 
         metrics.addCustomChart(
             SimplePie("production_entries") {
-                registered.sumOf { it.production.size }.toString()
+                MachineRegistry.map { it.value }.sumOf { it.production.size }.toString()
             }
         )
 
@@ -94,7 +91,7 @@ object MachineLoader {
             AdvancedPie("generated_items") {
                 val hashMap = hashMapOf<String, Int>()
 
-                for(entry in registered) {
+                for(entry in MachineRegistry.values) {
                     for (produceEntry in entry.production) {
                         val item = produceEntry.recipe.input[0]
                         val sfItem = item.getSlimefun<SlimefunItem>()
