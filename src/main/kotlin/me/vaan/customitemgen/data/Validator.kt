@@ -1,9 +1,17 @@
 package me.vaan.customitemgen.data
 
-typealias Validator<T> = (T) -> Boolean
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem
+import org.bukkit.block.Block
 
-operator fun <K, T : Any> HashMap<K, Validator<*>>.get(key: K, arg: T) : Boolean {
+typealias SFMachine = Pair<SlimefunItem, Block>
+typealias Validator = (SFMachine) -> Boolean
+
+operator fun <K> HashMap<K, Validator>.get(key: K, arg: SFMachine) : Boolean {
     val validator = this[key] ?: return true
-    val castedValidator = validator as Validator<T>
-    return castedValidator.invoke(arg)
+    return validator.invoke(arg)
+}
+
+fun <K> HashMap<K, Validator>.validate(arg: SFMachine) : Boolean {
+    val validated = this.values.map { it.invoke(arg) }
+    return validated.all { it }
 }

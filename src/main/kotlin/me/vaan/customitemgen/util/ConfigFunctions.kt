@@ -1,21 +1,15 @@
 package me.vaan.customitemgen.util
 
-import io.github.seggan.sf4k.extensions.getSlimefun
-import io.github.seggan.sf4k.extensions.isSlimefun
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe
 import me.vaan.customitemgen.CustomItemGenerators
-import me.vaan.customitemgen.data.BlockRelative
 import me.vaan.customitemgen.data.GenEntry
 import me.vaan.customitemgen.data.Validator
 import net.kyori.adventure.text.Component
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.inventory.ItemStack
-import org.bukkit.util.Vector
 
 
 fun FileConfiguration.getBlock(id: String): ItemStack {
@@ -88,21 +82,31 @@ fun FileConfiguration.getProduction(id: String): MutableList<GenEntry> {
     return ArrayList(genList)
 }
 
-fun FileConfiguration.getConditions(id: String): HashMap<String, Validator<*>> {
+fun FileConfiguration.getConditions(id: String): HashMap<String, Validator> {
     val conditionKeys = this.getConfigurationSection("$id.conditions")
-    val validatorList = hashMapOf<String, Validator<*>>()
+    val validatorList = hashMapOf<String, Validator>()
 
     conditionKeys ?: return validatorList
 
     //region Process time range
     val timeRange = conditionKeys.getString("time-range")
     if (timeRange != null) {
-        val validate: Validator<Int> = {
-            it in timeRange.parseTimeRange()
+        val validate: Validator = { (_, block) ->
+            block.world.time in timeRange.parseTimeRange()
         }
         validatorList["time-range"] = validate
     }
     //endregion
+
+    val requiresSunlight = conditionKeys.getBoolean("requires-sunlight", false)
+    if (requiresSunlight) {
+        val validate: Validator = { (_, block) ->
+            block.y == block.world.getHighestBlockAt(block.location).y
+        }
+
+        validatorList["requires-sunlight"] = validate
+    }
+
 
     return validatorList
 }
