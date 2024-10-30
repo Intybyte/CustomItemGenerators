@@ -11,7 +11,7 @@ operator fun <K> HashMap<K, Validator>.get(key: K, arg: SFMachine) : Boolean {
     return validator.invoke(arg)
 }
 
-fun <K> HashMap<K, Validator>.validate(arg: SFMachine) : Boolean {
+fun <K> Map<K, Validator>.validate(arg: SFMachine) : Boolean {
     val validated = this.values.map { it.invoke(arg) }
     return validated.all { it }
 }
