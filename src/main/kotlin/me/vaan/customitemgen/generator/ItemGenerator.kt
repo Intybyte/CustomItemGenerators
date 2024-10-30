@@ -34,6 +34,10 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
 import me.vaan.customitemgen.data.GenEntry
 import me.vaan.customitemgen.data.Options
+import me.vaan.customitemgen.data.SFMachine
+import me.vaan.customitemgen.data.validate
+import me.vaan.customitemgen.events.CIGInitEvent
+import me.vaan.customitemgen.events.CIGPreRunEvent
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.util.component
 import me.vaan.customitemgen.util.getDefaultName
@@ -42,6 +46,7 @@ import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.lang3.Validate
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -57,7 +62,7 @@ class ItemGenerator(
     item: SlimefunItemStack,
     recipeType: RecipeType?,
     recipe: Array<ItemStack?>,
-    private val options: Options,
+    val options: Options,
     val production: MutableList<GenEntry>
 ) : SlimefunItem(itemGroup, item, recipeType!!, recipe),
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
@@ -340,11 +345,28 @@ class ItemGenerator(
             currentConsumption = locConsumption.toInt()
         }
 
+        val event = CIGInitEvent(SFMachine(this, b), currentPosition, currentConsumption)
+        Bukkit.getPluginManager().callEvent(event)
+
         initiated = true
+    }
+
+    private fun checkValidators(b: Block): Boolean {
+        val sfMachine = SFMachine(this, b)
+        val execute = options.validators.validate(sfMachine)
+
+        val event = CIGPreRunEvent(sfMachine, execute)
+        Bukkit.getPluginManager().callEvent(event)
+
+        return execute && !event.isCancelled
     }
 
     private fun tick(b: Block) {
         initLocation(b)
+        if (!checkValidators(b)) {
+            return
+        }
+
         val inv = BlockStorage.getInventory(b)
         var currentOperation = processor.getOperation(b)
 
