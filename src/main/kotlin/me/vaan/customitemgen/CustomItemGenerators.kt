@@ -8,6 +8,7 @@ import org.bstats.bukkit.Metrics
 import org.bukkit.NamespacedKey
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.nio.file.Path
 
 class CustomItemGenerators : AbstractAddon() {
 
@@ -18,10 +19,13 @@ class CustomItemGenerators : AbstractAddon() {
             private set
         lateinit var metrics: Metrics
             private set
+        lateinit var pluginFolder: File
+            private set
     }
 
     override suspend fun onEnableAsync() {
         instance = this
+        pluginFolder = this.dataFolder
         metrics = Metrics(this, 23674)
         saveDefaultConfig()
 
