@@ -32,10 +32,7 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
-import me.vaan.customitemgen.data.GenEntry
-import me.vaan.customitemgen.data.Options
-import me.vaan.customitemgen.data.SFMachine
-import me.vaan.customitemgen.data.validate
+import me.vaan.customitemgen.data.*
 import me.vaan.customitemgen.events.CIGInitEvent
 import me.vaan.customitemgen.events.CIGPreRunEvent
 import me.vaan.customitemgen.file.DisplayLoader
@@ -73,6 +70,8 @@ class ItemGenerator(
     }
 
     private val processor = MachineProcessor(this)
+    var machineData = MachineData()
+        private set
     private var currentConsumption = 0
     private var currentPosition = 0
 
@@ -343,9 +342,12 @@ class ItemGenerator(
 
             val locConsumption = BlockStorage.getLocationInfo(b.location, KEY_CONSUMPTION) ?: production[0].energy.toString()
             currentConsumption = locConsumption.toInt()
-        }
 
-        val event = CIGInitEvent(SFMachine(this, b), currentPosition, currentConsumption)
+            machineData = MachineData(b.location)
+        }
+        machineData = MachineData(b.location)
+
+        val event = CIGInitEvent(SFMachine(this, b))
         Bukkit.getPluginManager().callEvent(event)
 
         initiated = true
@@ -393,6 +395,9 @@ class ItemGenerator(
             inv.pushItem(output.clone(), *outputSlots)
         }
 
+        machineData.itemProduced += currentOperation.results[0].amount
+        machineData.recipeExecuted++
+        machineData.serialize(b.location)
         processor.endOperation(b)
     }
 
