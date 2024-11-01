@@ -415,6 +415,10 @@ class ItemGenerator(
 
         val charge = getCharge(l)
 
+        if (energyConsumption == 0) {
+            return true
+        }
+
         if (charge < energyConsumption) {
             return false
         }
