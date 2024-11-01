@@ -376,12 +376,10 @@ class ItemGenerator(
         val sfMachine = SFMachine(this, b)
         val execute = options.validators.validate(sfMachine)
 
-        val event = runBlocking {
-            withContext(CustomItemGenerators.instance.minecraftDispatcher) {
-                val event = CIGPreRunEvent(sfMachine, execute)
-                Bukkit.getPluginManager().callEvent(event)
-                event
-            }
+        val event = runBlocking(CustomItemGenerators.instance.minecraftDispatcher) {
+            val event = CIGPreRunEvent(sfMachine, execute)
+            Bukkit.getPluginManager().callEvent(event)
+            event
         }
 
         return execute && !event.isCancelled
