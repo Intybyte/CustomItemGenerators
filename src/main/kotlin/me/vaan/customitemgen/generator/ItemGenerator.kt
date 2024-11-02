@@ -1,6 +1,5 @@
 package me.vaan.customitemgen.generator
 
-import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup
@@ -40,7 +39,6 @@ import me.vaan.customitemgen.data.GenEntry
 import me.vaan.customitemgen.data.Options
 import me.vaan.customitemgen.data.SFMachine
 import me.vaan.customitemgen.data.validate
-import me.vaan.customitemgen.events.CIGInitEvent
 import me.vaan.customitemgen.events.CIGPreRunEvent
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.util.*
@@ -318,18 +316,6 @@ class ItemGenerator(
         })
     }
 
-    private var initiated: Boolean = false
-    private fun initLocation(b: Block) {
-        if (initiated) return
-
-        CustomItemGenerators.instance.launch {
-            val event = CIGInitEvent(SFMachine(this@ItemGenerator, b))
-            Bukkit.getPluginManager().callEvent(event)
-        }
-
-        initiated = true
-    }
-
     private fun checkValidators(b: Block): Boolean {
         val sfMachine = SFMachine(this, b)
         val execute = options.validators.validate(sfMachine)
@@ -344,7 +330,6 @@ class ItemGenerator(
     }
 
     private fun tick(b: Block) {
-        initLocation(b)
         if (!checkValidators(b)) {
             return
         }
