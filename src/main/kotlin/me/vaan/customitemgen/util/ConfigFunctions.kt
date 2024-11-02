@@ -97,13 +97,13 @@ fun FileConfiguration.getConditions(id: String): HashMap<String, Validator> {
     }
     //endregion
 
-    val requiresSunlight = conditionKeys.getBoolean("requires-sunlight", false)
-    if (requiresSunlight) {
+    val requiresSkyAccess = conditionKeys.getBoolean("requires-sky-access", false)
+    if (requiresSkyAccess) {
         val validate: Validator = { (_, block) ->
             block.y == block.world.getHighestBlockAt(block.location).y
         }
 
-        validatorList["requires-sunlight"] = validate
+        validatorList["requires-sky-access"] = validate
     }
 
 
