@@ -36,18 +36,15 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow
 import me.vaan.customitemgen.CustomItemGenerators
-import me.vaan.customitemgen.data.*
+import me.vaan.customitemgen.data.GenEntry
+import me.vaan.customitemgen.data.Options
+import me.vaan.customitemgen.data.SFMachine
+import me.vaan.customitemgen.data.validate
 import me.vaan.customitemgen.events.CIGInitEvent
 import me.vaan.customitemgen.events.CIGPreRunEvent
 import me.vaan.customitemgen.file.DisplayLoader
-import me.vaan.customitemgen.util.component
-import me.vaan.customitemgen.util.demark
-import me.vaan.customitemgen.util.getDefaultName
-import me.vaan.customitemgen.util.mark
+import me.vaan.customitemgen.util.*
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextDecoration
 import org.apache.commons.lang3.Validate
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -129,21 +126,7 @@ class ItemGenerator(
 
         val allRecipes = production.map {
             val ditem = it.recipe.output[0]
-            val meta = ditem.itemMeta
-
-            var name = if (meta.hasDisplayName()) {
-                val display = meta.displayName()!! as TextComponent
-                if (display.content().isEmpty()) {
-                    display.children()[0] as TextComponent
-                } else {
-                    display
-                }
-
-            } else {
-                ditem.type.getDefaultName()
-                    .color(NamedTextColor.WHITE)
-                    .decoration(TextDecoration.ITALIC, false)
-            }
+            var name = ditem.displayOrDefault()
 
             val currentStyle = name.style()
             if (ditem.amount != 1) {
@@ -270,17 +253,11 @@ class ItemGenerator(
     override fun getDisplayRecipes(): List<ItemStack> {
         return production.map { entry ->
             val clone = entry.recipe.output[0].clone()
-            clone.editMeta { m ->
-                val base = m.lore() ?: emptyList()
-                val toAdd = listOf(
-                    "".component(),
-                    LoreBuilder.powerPerSecond(entry.energy * 2).replace('&', '§').component(),
-                    "§8⇨ §eTime required: §7${entry.recipe.ticks / 2} s".component()
-                )
-
-                m.lore(base + toAdd)
-            }
-            clone
+            clone.addLore(
+                "",
+                LoreBuilder.powerPerSecond(entry.energy * 2).replace('&', '§'),
+                "§8⇨ §eTime required: §7${entry.recipe.ticks / 2} s"
+            )
         }
     }
 
