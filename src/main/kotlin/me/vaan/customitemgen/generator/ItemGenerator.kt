@@ -71,25 +71,16 @@ class ItemGenerator(
     InventoryBlock, EnergyNetComponent, MachineProcessHolder<CraftingOperation>, RecipeDisplayItem {
 
     companion object {
-        private const val KEY_POSITION = "current-position"
-        private const val KEY_CONSUMPTION = "current-consumption"
+        const val KEY_POSITION = "current-position"
+        const val KEY_CONSUMPTION = "current-consumption"
     }
 
     private val processor = MachineProcessor(this)
-    var machineData = MachineData()
-        private set
-    private var currentConsumption = 0
-    private var currentPosition = 0
-
-    private val energyConsumption: Int
-        get() {
-            return currentConsumption
-        }
 
     var energyCapacity = -1
         private set
 
-    private val blockMenuPreset = object : BlockMenuPreset(this.id, inventoryTitle) {
+    val blockMenuPreset = object : BlockMenuPreset(this.id, inventoryTitle) {
         override fun init() = constructMenu(this)
 
         override fun getSlotsAccessedByItemTransport(flow: ItemTransportFlow): IntArray {
@@ -103,13 +94,14 @@ class ItemGenerator(
         override fun newInstance(menu: BlockMenu, block: Block) {
             if (options.entryRandomizer) return
 
-            val baseItem = production[0].recipe.input[0]
+            val position = BlockStorage.getLocationInfo(block.location, KEY_POSITION) ?: "0"
+            val baseItem = production[position.toInt()].recipe.input[0]
             menu.addItem(inputSlots[0], baseItem) { _: Player?, slot: Int, _: ItemStack?, _: ClickAction? ->
-                this@ItemGenerator.incrementPosition()
-                BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
-                BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
+                val startPositionString = BlockStorage.getLocationInfo(block.location, KEY_POSITION) ?: "0"
+                val startPosition = (startPositionString.toInt() + 1) % production.size
+                BlockStorage.addBlockInfo(block, KEY_POSITION, startPosition.toString())
 
-                menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0].clone().mark())
+                menu.replaceExistingItem(slot, production[startPosition].recipe.input[0].clone().mark())
                 false
             }
         }
@@ -197,10 +189,6 @@ class ItemGenerator(
         }
     }
 
-    private fun incrementPosition() {
-        currentPosition = (currentPosition + 1) % production.size
-    }
-
     override fun getMachineProcessor(): MachineProcessor<CraftingOperation> {
         return processor
     }
@@ -224,13 +212,17 @@ class ItemGenerator(
             ChestMenuUtils.getEmptyClickHandler()
         )
 
+
         preset.addItem(
-            inputSlots[0], if (options.entryRandomizer) {
+            inputSlots[0],
+            if (options.entryRandomizer) {
                 createRandomizerItem().mark()
             } else {
-                production[0].recipe.input[0].clone().mark()
-            }, ChestMenuUtils.getEmptyClickHandler()
+                ItemStack(Material.AIR)
+            },
+            ChestMenuUtils.getEmptyClickHandler()
         )
+
 
         val outputHandler = object : AdvancedMenuClickHandler {
             override fun onClick(p: Player, slot: Int, cursor: ItemStack, action: ClickAction): Boolean {
@@ -353,18 +345,6 @@ class ItemGenerator(
     private fun initLocation(b: Block) {
         if (initiated) return
 
-        if (BlockStorage.hasBlockInfo(b)) {
-            val locPosition = BlockStorage.getLocationInfo(b.location, KEY_POSITION) ?: "0"
-            currentPosition = locPosition.toInt()
-
-            val locConsumption =
-                BlockStorage.getLocationInfo(b.location, KEY_CONSUMPTION) ?: production[0].energy.toString()
-            currentConsumption = locConsumption.toInt()
-
-            machineData = MachineData(b.location)
-        }
-        machineData = MachineData(b.location)
-
         CustomItemGenerators.instance.launch {
             val event = CIGInitEvent(SFMachine(this@ItemGenerator, b))
             Bukkit.getPluginManager().callEvent(event)
@@ -418,9 +398,6 @@ class ItemGenerator(
             inv.pushItem(output.clone().demark(), *outputSlots)
         }
 
-        machineData.itemProduced += currentOperation.results[0].amount
-        machineData.recipeExecuted++
-        machineData.serialize(b.location)
         processor.endOperation(b)
     }
 
@@ -437,42 +414,43 @@ class ItemGenerator(
         }
 
         val charge = getCharge(l)
+        val consumption = l.energyConsumption
 
-        if (energyConsumption == 0) {
+        if (consumption == 0) {
             return true
         }
 
-        if (charge < energyConsumption) {
+        if (charge < consumption) {
             return false
         }
 
-        setCharge(l, charge - energyConsumption)
+        setCharge(l, charge - consumption)
         return true
     }
 
     private fun findNextRecipe(inv: BlockMenu, b: Block): MachineRecipe? {
-        if (options.entryRandomizer) {
-            currentPosition = Random.nextInt(production.size)
-            val recipe = production[currentPosition].recipe
-
-            if (!InvUtils.fitAll(inv.toInventory(), recipe.output, *outputSlots)) {
-                return null
-            }
-
-            currentConsumption = production[currentPosition].energy
-
-            BlockStorage.addBlockInfo(b, KEY_POSITION, currentPosition.toString())
-            BlockStorage.addBlockInfo(b, KEY_CONSUMPTION, currentConsumption.toString())
-            return recipe
+        val location = b.location
+        val recipe = if(options.entryRandomizer) {
+            location.currentPosition = Random.nextInt(production.size)
+            production[location.currentPosition].recipe
+        } else {
+            production[location.currentPosition].recipe
         }
-
-        val recipe = production[currentPosition].recipe
 
         if (!InvUtils.fitAll(inv.toInventory(), recipe.output, *outputSlots)) {
             return null
         }
 
-        currentConsumption = production[currentPosition].energy
+        location.energyConsumption = production[location.currentPosition].energy
         return recipe
     }
+
+    var Location.energyConsumption : Int
+        get() = BlockStorage.getLocationInfo(this, KEY_CONSUMPTION)?.toInt() ?: production[0].energy
+        set(value) = BlockStorage.addBlockInfo(this, KEY_CONSUMPTION, value.toString())
+
+
+    var Location.currentPosition: Int
+        get() = BlockStorage.getLocationInfo(this, KEY_POSITION)?.toInt() ?: 0
+        set(value) = BlockStorage.addBlockInfo(this, KEY_POSITION, value.toString())
 }
