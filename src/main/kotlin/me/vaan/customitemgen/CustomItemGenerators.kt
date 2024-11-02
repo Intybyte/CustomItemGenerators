@@ -20,12 +20,15 @@ class CustomItemGenerators : AbstractAddon() {
             private set
         lateinit var pluginFolder: File
             private set
+        lateinit var key: NamespacedKey
+            private set
     }
 
     override suspend fun onEnableAsync() {
         instance = this
         pluginFolder = this.dataFolder
         metrics = Metrics(this, 23674)
+        key = NamespacedKey(this, "mark")
         saveDefaultConfig()
 
         val stack = config.getBlock("GROUP.item")

@@ -6,7 +6,6 @@ import me.vaan.customitemgen.CustomItemGenerators
 import me.vaan.customitemgen.data.GenEntry
 import me.vaan.customitemgen.data.Validator
 import net.kyori.adventure.text.Component
-import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.inventory.ItemStack

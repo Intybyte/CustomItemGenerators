@@ -25,7 +25,6 @@ import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils
 import io.github.thebusybiscuit.slimefun4.utils.LoreBuilder
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu.AdvancedMenuClickHandler
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction
@@ -42,7 +41,9 @@ import me.vaan.customitemgen.events.CIGInitEvent
 import me.vaan.customitemgen.events.CIGPreRunEvent
 import me.vaan.customitemgen.file.DisplayLoader
 import me.vaan.customitemgen.util.component
+import me.vaan.customitemgen.util.demark
 import me.vaan.customitemgen.util.getDefaultName
+import me.vaan.customitemgen.util.mark
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -108,7 +109,7 @@ class ItemGenerator(
                 BlockStorage.addBlockInfo(block, KEY_POSITION, currentPosition.toString())
                 BlockStorage.addBlockInfo(block, KEY_CONSUMPTION, currentConsumption.toString())
 
-                menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0])
+                menu.replaceExistingItem(slot, production[currentPosition].recipe.input[0].clone().mark())
                 false
             }
         }
@@ -225,9 +226,9 @@ class ItemGenerator(
 
         preset.addItem(
             inputSlots[0], if (options.entryRandomizer) {
-                createRandomizerItem()
+                createRandomizerItem().mark()
             } else {
-                production[0].recipe.input[0]
+                production[0].recipe.input[0].clone().mark()
             }, ChestMenuUtils.getEmptyClickHandler()
         )
 
@@ -414,7 +415,7 @@ class ItemGenerator(
 
         inv.replaceExistingItem(DisplayLoader.PROGRESS_SLOT, CustomItemStack(Material.BLACK_STAINED_GLASS_PANE, " "))
         for (output in currentOperation.results) {
-            inv.pushItem(output.clone(), *outputSlots)
+            inv.pushItem(output.clone().demark(), *outputSlots)
         }
 
         machineData.itemProduced += currentOperation.results[0].amount
@@ -450,9 +451,6 @@ class ItemGenerator(
     }
 
     private fun findNextRecipe(inv: BlockMenu, b: Block): MachineRecipe? {
-        val slot = inputSlots[0]
-        val item = inv.getItemInSlot(slot)
-
         if (options.entryRandomizer) {
             currentPosition = Random.nextInt(production.size)
             val recipe = production[currentPosition].recipe
@@ -469,11 +467,6 @@ class ItemGenerator(
         }
 
         val recipe = production[currentPosition].recipe
-
-        val input = recipe.input[0]
-        if (!SlimefunUtils.isItemSimilar(item, input, true)) {
-            return null
-        }
 
         if (!InvUtils.fitAll(inv.toInventory(), recipe.output, *outputSlots)) {
             return null
